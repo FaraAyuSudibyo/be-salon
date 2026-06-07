@@ -1,79 +1,137 @@
-const { Booking, Service, User, Payment } = require('../models')
-const { response } = require('../helpers/response.formatter')
-const { Op }       = require('sequelize')
+const { Booking, Service, User, Payment } = require("../models");
+const { response } = require("../helpers/response.formatter");
+const { Op } = require("sequelize");
 
 module.exports = {
-
-  // GET /reports/summary  — dipakai Dashboard FE
+  // GET /reports/summary — ringkasan statistik untuk halaman Dashboard FE
   getSummary: async (req, res) => {
     try {
-      const paidPayments    = await Payment.findAll({ where: { status: 'paid' } })
-      const totalRevenue    = paidPayments.reduce((s, p) => s + (p.amount || 0), 0)
-      const totalBookings   = await Booking.count()
-      const pendingBookings = await Booking.count({ where: { status: 'pending' } })
-      const pendingPayments = await Payment.count({ where: { status: 'pending_verification' } })
-      const homeServiceCount= await Booking.count({ where: { service_type: 'homeservice' } })
-      const totalServices   = await Service.count()
-      const totalCustomers  = await User.count({ where: { role: 'customer' } })
+      // ambil semua pembayaran yang sudah lunas (paid)
+      const pembayaranLunas = await Payment.findAll({
+        where: { status: "paid" },
+      });
+      // hitung total revenue dari semua pembayaran lunas
+      const totalPendapatan = pembayaranLunas.reduce(
+        (total, pembayaran) => total + (pembayaran.amount || 0),
+        0,
+      );
 
-      return res.status(200).json(response(200, 'success', {
-        totalRevenue, totalBookings, pendingBookings,
-        pendingPayments, homeServiceCount, totalServices, totalCustomers
-      }))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+      const totalBooking = await Booking.count();
+      const bookingMenunggu = await Booking.count({
+        where: { status: "pending" },
+      });
+      const pembayaranMenungguKonfirmasi = await Payment.count({
+        where: { status: "pending_verification" },
+      });
+      const jumlahHomeService = await Booking.count({
+        where: { service_type: "homeservice" },
+      });
+      const totalLayanan = await Service.count();
+      const totalPelanggan = await User.count({ where: { role: "customer" } });
+
+      return res.status(200).json(
+        response(200, "success", {
+          totalRevenue: totalPendapatan,
+          totalBookings: totalBooking,
+          pendingBookings: bookingMenunggu,
+          pendingPayments: pembayaranMenungguKonfirmasi,
+          homeServiceCount: jumlahHomeService,
+          totalServices: totalLayanan,
+          totalCustomers: totalPelanggan,
+        }),
+      );
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
   },
 
-  // GET /reports/revenue-by-service  — dipakai halaman Reports FE
+  // GET /reports/revenue-by-service — pendapatan per layanan untuk halaman Reports FE
   getRevenueByService: async (req, res) => {
     try {
-      const bookings = await Booking.findAll({
-        where:   { status: 'completed' },
+      // ambil semua booking yang sudah selesai (completed) dan pembayarannya lunas (paid)
+      const bookingSelesai = await Booking.findAll({
+        where: { status: "completed" },
         include: [
-          { model: Service, as: 'service', attributes: ['name'] },
-          { model: Payment, as: 'payment', where: { status: 'paid' }, required: true }
-        ]
-      })
+          { model: Service, as: "service", attributes: ["name"] },
+          {
+            model: Payment,
+            as: "payment",
+            where: { status: "paid" },
+            required: true,
+          },
+        ],
+      });
 
-      const map = {}
-      bookings.forEach(b => {
-        const name = b.service ? b.service.name : 'Unknown'
-        if (!map[name]) map[name] = { service_name: name, total: 0, count: 0 }
-        map[name].total += b.payment ? b.payment.amount : 0
-        map[name].count += 1
-      })
-      return res.status(200).json(response(200, 'success',
-        Object.values(map).sort((a, b) => b.total - a.total)
-      ))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+      // kelompokkan berdasarkan nama layanan dan hitung total pendapatan
+      const kelompokPerLayanan = {};
+      bookingSelesai.forEach((dataBooking) => {
+        const namaLayanan = dataBooking.service
+          ? dataBooking.service.name
+          : "Unknown";
+        if (!kelompokPerLayanan[namaLayanan]) {
+          kelompokPerLayanan[namaLayanan] = {
+            service_name: namaLayanan,
+            total: 0,
+            count: 0,
+          };
+        }
+        kelompokPerLayanan[namaLayanan].total += dataBooking.payment
+          ? dataBooking.payment.amount
+          : 0;
+        kelompokPerLayanan[namaLayanan].count += 1;
+      });
+
+      // ubah object menjadi array dan urutkan dari yang terbesar
+      const hasilOutput = Object.values(kelompokPerLayanan).sort(
+        (a, b) => b.total - a.total,
+      );
+      return res.status(200).json(response(200, "success", hasilOutput));
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
   },
 
-  // GET /reports/booking-stats?month=6&year=2026
+  // GET /reports/booking-stats — statistik booking per bulan
+  // query: month (angka bulan 1-12), year (tahun misal 2026)
   getBookingStats: async (req, res) => {
     try {
-      const { month, year } = req.query
-      const where = {}
+      const { month, year } = req.query;
+
+      const kondisiFilter = {};
       if (month && year) {
-        where.date = {
+        // filter booking berdasarkan bulan dan tahun
+        kondisiFilter.date = {
           [Op.between]: [
-            `${year}-${String(month).padStart(2,'0')}-01`,
-            `${year}-${String(month).padStart(2,'0')}-31`
-          ]
-        }
+            `${year}-${String(month).padStart(2, "0")}-01`, // tanggal awal bulan
+            `${year}-${String(month).padStart(2, "0")}-31`, // tanggal akhir bulan
+          ],
+        };
       }
-      const rows = await Booking.findAll({ where })
-      return res.status(200).json(response(200, 'success', {
-        pending:     rows.filter(b => b.status === 'pending').length,
-        confirmed:   rows.filter(b => b.status === 'confirmed').length,
-        in_progress: rows.filter(b => b.status === 'in_progress').length,
-        completed:   rows.filter(b => b.status === 'completed').length,
-        cancelled:   rows.filter(b => b.status === 'cancelled').length
-      }))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+
+      const semuaBooking = await Booking.findAll({ where: kondisiFilter });
+
+      // hitung jumlah booking per status
+      return res.status(200).json(
+        response(200, "success", {
+          pending: semuaBooking.filter(
+            (booking) => booking.status === "pending",
+          ).length,
+          confirmed: semuaBooking.filter(
+            (booking) => booking.status === "confirmed",
+          ).length,
+          in_progress: semuaBooking.filter(
+            (booking) => booking.status === "in_progress",
+          ).length,
+          completed: semuaBooking.filter(
+            (booking) => booking.status === "completed",
+          ).length,
+          cancelled: semuaBooking.filter(
+            (booking) => booking.status === "cancelled",
+          ).length,
+        }),
+      );
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
-  }
-}
+  },
+};

@@ -1,133 +1,189 @@
-const Validator    = require('fastest-validator')
-const v            = new Validator()
-const { Op }       = require('sequelize')
-const path         = require('path')
-const fs           = require('fs')
-const { Service }  = require('../models')
-const { response } = require('../helpers/response.formatter')
+const Validator = require("fastest-validator");
+const validator = new Validator();
+const { Op } = require("sequelize");
+const path = require("path");
+const fs = require("fs");
+const { Service } = require("../models");
+const { response } = require("../helpers/response.formatter");
 
 module.exports = {
-
   // GET /services  (query: name, category)
-  // FE pakai: s.id, s.name, s.category, s.price, s.duration, s.description, s.image
+  // FE pakai: service.id, service.name, service.category, service.price, dst
   getService: async (req, res) => {
     try {
-      const { name, category } = req.query
-      const where = {}
-      if (name)     where.name     = { [Op.like]: `%${name}%` }
-      if (category) where.category = category
+      const { name, category } = req.query;
 
-      const services = await Service.findAll({ where, order: [['created_at', 'DESC']] })
+      // kondisi pencarian berdasarkan query yang dikirim
+      const kondisiCari = {};
+      if (name) kondisiCari.name = { [Op.like]: `%${name}%` };
+      if (category) kondisiCari.category = category;
 
-      // mapping output agar id nya bernama "id" (sesuai yang dipakai FE: s.id)
-      const data = services.map(s => ({
-        id:          Number(s.id_services),
-        name:        s.name,
-        category:    s.category,
-        price:       s.price,
-        duration:    s.duration,
-        description: s.description,
-        image:       s.image
-      }))
-      return res.status(200).json(response(200, 'success', data))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+      const semuaService = await Service.findAll({
+        where: kondisiCari,
+        order: [["created_at", "DESC"]],
+      });
+
+      // ubah nama kolom id_services menjadi id (sesuai yang dipakai FE)
+      const dataOutput = semuaService.map((service) => ({
+        id: Number(service.id_services),
+        name: service.name,
+        category: service.category,
+        price: service.price,
+        duration: service.duration,
+        description: service.description,
+        image: service.image,
+      }));
+      return res.status(200).json(response(200, "success", dataOutput));
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
   },
 
-  // GET /services/:id
+  // GET /services/:id — detail satu service
   detailService: async (req, res) => {
     try {
-      const s = await Service.findByPk(req.params.id)
-      if (!s) return res.status(404).json(response(404, 'service not found'))
-      return res.status(200).json(response(200, 'success', {
-        id: Number(s.id_services), name: s.name, category: s.category,
-        price: s.price, duration: s.duration, description: s.description, image: s.image
-      }))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+      const dataService = await Service.findByPk(req.params.id);
+      if (!dataService)
+        return res.status(404).json(response(404, "service not found"));
+
+      return res.status(200).json(
+        response(200, "success", {
+          id: Number(dataService.id_services),
+          name: dataService.name,
+          category: dataService.category,
+          price: dataService.price,
+          duration: dataService.duration,
+          description: dataService.description,
+          image: dataService.image,
+        }),
+      );
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
   },
 
-  // POST /services  (form-data: name, category, price, duration, description, image file)
+  // POST /services — tambah service baru (admin)
+  // form-data: name, category, price, duration, description, image (file)
   createService: async (req, res) => {
     try {
-      const { name, category, price, duration, description } = req.body
-      const schema = {
-        name:     { type: 'string', min: 2 },
-        category: { type: 'string' },
-        price:    { type: 'number', positive: true, integer: true }
-      }
-      const validate = v.validate({ name, category, price: Number(price) }, schema)
-      if (validate.length > 0) return res.status(400).json(response(400, 'validasi error', validate))
+      const { name, category, price, duration, description } = req.body;
 
-      const s = await Service.create({
+      const schema = {
+        name: { type: "string", min: 2 },
+        category: { type: "string" },
+        price: { type: "number", positive: true, integer: true },
+      };
+      const hasilValidasi = validator.validate(
+        { name, category, price: Number(price) },
+        schema,
+      );
+      if (hasilValidasi.length > 0)
+        return res
+          .status(400)
+          .json(response(400, "validasi error", hasilValidasi));
+
+      const serviceBaru = await Service.create({
         name,
         category,
-        price:       Number(price),
-        duration:    duration ? Number(duration) : null,
-        description: description || '',
-        image:       req.file ? req.file.filename : null
-      })
-      return res.status(201).json(response(201, 'created', {
-        id: Number(s.id_services), name: s.name, category: s.category,
-        price: s.price, duration: s.duration, description: s.description, image: s.image
-      }))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+        price: Number(price),
+        duration: duration ? Number(duration) : null,
+        description: description || "",
+        image: req.file ? req.file.filename : null, // req.file = file yang diupload
+      });
+
+      return res.status(201).json(
+        response(201, "created", {
+          id: Number(serviceBaru.id_services),
+          name: serviceBaru.name,
+          category: serviceBaru.category,
+          price: serviceBaru.price,
+          duration: serviceBaru.duration,
+          description: serviceBaru.description,
+          image: serviceBaru.image,
+        }),
+      );
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
   },
 
-  // PUT /services/:id
+  // PUT /services/:id — edit service (admin)
   updateService: async (req, res) => {
     try {
-      const { id } = req.params
-      const { name, category, price, duration, description } = req.body
+      const { id } = req.params;
+      const { name, category, price, duration, description } = req.body;
+
       const schema = {
-        name:     { type: 'string', min: 2 },
-        category: { type: 'string' },
-        price:    { type: 'number', positive: true, integer: true }
-      }
-      const validate = v.validate({ name, category, price: Number(price) }, schema)
-      if (validate.length > 0) return res.status(400).json(response(400, 'validasi error', validate))
+        name: { type: "string", min: 2 },
+        category: { type: "string" },
+        price: { type: "number", positive: true, integer: true },
+      };
+      const hasilValidasi = validator.validate(
+        { name, category, price: Number(price) },
+        schema,
+      );
+      if (hasilValidasi.length > 0)
+        return res
+          .status(400)
+          .json(response(400, "validasi error", hasilValidasi));
 
-      const before = await Service.findByPk(id)
-      if (!before) return res.status(404).json(response(404, 'service not found'))
+      // ambil data service lama sebelum diubah
+      const serviceSebelumDiubah = await Service.findByPk(id);
+      if (!serviceSebelumDiubah)
+        return res.status(404).json(response(404, "service not found"));
 
-      // hapus gambar lama jika upload gambar baru
+      // jika ada gambar baru yang diupload, hapus gambar lama dari folder uploads
       if (req.file) {
-        const oldImg = before.getDataValue('image')
-        if (oldImg && !oldImg.startsWith('http')) {
-          const fp = path.join(__dirname, '../uploads', oldImg)
-          if (fs.existsSync(fp)) fs.unlinkSync(fp)
+        const namaGambarLama = serviceSebelumDiubah.getDataValue("image");
+        if (namaGambarLama && !namaGambarLama.startsWith("http")) {
+          const lokasiFileLama = path.join(
+            __dirname,
+            "../uploads",
+            namaGambarLama,
+          );
+          if (fs.existsSync(lokasiFileLama)) fs.unlinkSync(lokasiFileLama);
         }
       }
 
-      await Service.update({
-        name, category,
-        price:       Number(price),
-        duration:    duration ? Number(duration) : before.duration,
-        description: description || before.description,
-        image:       req.file ? req.file.filename : before.getDataValue('image')
-      }, { where: { id_services: id } })
+      await Service.update(
+        {
+          name,
+          category,
+          price: Number(price),
+          duration: duration ? Number(duration) : serviceSebelumDiubah.duration,
+          description: description || serviceSebelumDiubah.description,
+          // kalau ada gambar baru pakai gambar baru, kalau tidak pakai gambar lama
+          image: req.file
+            ? req.file.filename
+            : serviceSebelumDiubah.getDataValue("image"),
+        },
+        { where: { id_services: id } },
+      );
 
-      const updated = await Service.findByPk(id)
-      return res.status(200).json(response(200, 'updated', {
-        id: Number(updated.id_services), name: updated.name, category: updated.category,
-        price: updated.price, duration: updated.duration, description: updated.description, image: updated.image
-      }))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+      const serviceTerbaru = await Service.findByPk(id);
+      return res.status(200).json(
+        response(200, "updated", {
+          id: Number(serviceTerbaru.id_services),
+          name: serviceTerbaru.name,
+          category: serviceTerbaru.category,
+          price: serviceTerbaru.price,
+          duration: serviceTerbaru.duration,
+          description: serviceTerbaru.description,
+          image: serviceTerbaru.image,
+        }),
+      );
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
   },
 
-  // DELETE /services/:id
+  // DELETE /services/:id — hapus service (admin)
   deleteService: async (req, res) => {
     try {
-      await Service.destroy({ where: { id_services: req.params.id } })
-      return res.status(200).json(response(200, 'deleted'))
-    } catch (e) {
-      return res.status(500).json(response(500, 'server error', e.message))
+      await Service.destroy({ where: { id_services: req.params.id } });
+      return res.status(200).json(response(200, "deleted"));
+    } catch (error) {
+      return res.status(500).json(response(500, "server error", error.message));
     }
-  }
-}
+  },
+};

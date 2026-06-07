@@ -1,37 +1,48 @@
-const express = require('express')
-const cors    = require('cors')
-const app     = express()
-const port    = 3000
+const express = require("express");
+const cors = require("cors");
+const app = express();
+const port = 3000;
 
-const db              = require('./models')
-const { verifyToken } = require('./middlewares/auth')
+// import koneksi database dan semua model
+const db = require("./models");
 
-const authRouter    = require('./routes/auth.route')
-const serviceRouter = require('./routes/service.route')
-const bookingRouter = require('./routes/booking.route')
-const paymentRouter = require('./routes/payment.route')
-const reportRouter  = require('./routes/report.route')
-const profileRouter = require('./routes/profile.route')
+// import middleware untuk cek token JWT
+const { verifyToken } = require("./middlewares/auth");
 
-// cek koneksi database
-db.sequelize.authenticate()
-  .then(() => console.log('Database terhubung'))
-  .catch(e  => console.error('Gagal koneksi DB:', e.message))
+// import semua router
+const routerAuth = require("./routes/auth.route");
+const routerService = require("./routes/service.route");
+const routerBooking = require("./routes/booking.route");
+const routerPayment = require("./routes/payment.route");
+const routerReport = require("./routes/report.route");
+const routerProfile = require("./routes/profile.route");
 
-app.use(express.json())
-app.use(cors())
-app.use('/uploads', express.static('uploads'))
+// cek apakah koneksi ke database berhasil
+db.sequelize
+  .authenticate()
+  .then(() => console.log("Database terhubung"))
+  .catch((error) => console.error("Gagal koneksi DB:", error.message));
 
-// auth tidak perlu token
-app.use('/auth',     authRouter)
+// express.json() : agar bisa menerima dan mengirim data JSON
+app.use(express.json());
+// cors : agar frontend bisa mengakses API ini
+app.use(cors());
+// static('uploads') : agar file gambar di folder uploads bisa diakses lewat browser
+app.use("/uploads", express.static("uploads"));
 
-// semua route di bawah perlu token
-app.use('/services', verifyToken, serviceRouter)
-app.use('/bookings', verifyToken, bookingRouter)
-app.use('/payments', verifyToken, paymentRouter)
-app.use('/reports',  verifyToken, reportRouter)
-app.use('/profile',  verifyToken, profileRouter)
+// daftarkan semua route
+// /auth tidak butuh token (login & register)
+app.use("/auth", routerAuth);
+// route di bawah ini semua butuh token JWT (harus login dulu)
+app.use("/services", routerService);
+app.use("/bookings", verifyToken, routerBooking);
+app.use("/payments", verifyToken, routerPayment);
+app.use("/reports", verifyToken, routerReport);
+app.use("/profile", verifyToken, routerProfile);
 
-app.get('/', (req, res) => res.send('Dream Beauty Salon API - Ready!'))
+// route utama untuk cek apakah server berjalan
+app.get("/", (req, res) => res.send("Dream Beauty Salon API - Ready!"));
 
-app.listen(port, () => console.log(`Server jalan di http://localhost:${port}`))
+app.listen(port, () =>
+  console.log(`Server berjalan di http://localhost:${port}`),
+);

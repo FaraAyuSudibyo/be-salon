@@ -1,36 +1,42 @@
-'use strict'
-const { Model } = require('sequelize')
+"use strict";
+const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class Review extends Model {
     static associate(models) {
-      Review.belongsTo(models.Booking, { foreignKey: 'id_bookings', as: 'booking' })
+      Review.belongsTo(models.Booking, {
+        foreignKey: "id_bookings",
+        as: "booking",
+      });
     }
   }
 
-  Review.init({
-    id_reviews: {
-      type:          DataTypes.BIGINT,
-      primaryKey:    true,
-      autoIncrement: true
+  Review.init(
+    {
+      id_reviews: {
+        type: DataTypes.BIGINT,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      id_bookings: {
+        type: DataTypes.BIGINT,
+      },
+      // rating disimpan integer 1-5, sama seperti yang dipakai FE
+      rating: {
+        type: DataTypes.INTEGER,
+      },
+      comment: {
+        type: DataTypes.TEXT,
+      },
     },
-    id_bookings: {
-      type: DataTypes.BIGINT
+    {
+      sequelize,
+      modelName: "Review",
+      tableName: "reviews",
+      timestamps: true,
+      underscored: true,
     },
-    // rating disimpan integer 1-5, sama seperti yang dipakai FE
-    rating: {
-      type: DataTypes.INTEGER
-    },
-    comment: {
-      type: DataTypes.TEXT
-    }
-  }, {
-    sequelize,
-    modelName:   'Review',
-    tableName:   'reviews',
-    timestamps:  true,
-    underscored: true
-  })
+  );
 
-  return Review
-}
+  return Review;
+};

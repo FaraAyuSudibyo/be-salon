@@ -7,7 +7,6 @@ const { response } = require("../helpers/response.formatter");
 const { auth_secret } = require("../config/base.config");
 
 module.exports = {
-  // POST /auth/register
   register: async (req, res) => {
     try {
       const { name, email, password, phone } = req.body;
@@ -61,7 +60,6 @@ module.exports = {
     }
   },
 
-  // POST /auth/login
   // FE kirim: email, password
   login: async (req, res) => {
     try {
@@ -91,8 +89,6 @@ module.exports = {
           .status(400)
           .json(response(400, "validasi error", "Email atau password salah"));
 
-      // buat token JWT yang berisi data user (tanpa password)
-      // token ini akan dipakai untuk mengakses endpoint yang butuh login
       const tokenJWT = jwt.sign(
         {
           userId: Number(dataUser.id_users),

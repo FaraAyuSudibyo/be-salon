@@ -8,7 +8,6 @@ const BIAYA_HOME_SERVICE = 50000;
 
 // fungsi untuk mengubah format data booking dari database
 // menjadi format yang dipakai oleh frontend
-// contoh: id_bookings → id, id_users → customerId, User.username → customerName
 function formatBooking(dataBooking) {
   const dataPayment = dataBooking.payment || null;
   const dataReview = dataBooking.review || null;
@@ -30,12 +29,10 @@ function formatBooking(dataBooking) {
     time: dataBooking.time,
     status: dataBooking.status,
     notes: dataBooking.notes || "",
-    // data dari tabel payments
     paymentMethod: dataPayment ? dataPayment.method : "",
     paymentStatus: dataPayment ? dataPayment.status : "unpaid",
     paymentProof: dataPayment ? dataPayment.payment_proof : null,
     rejectReason: dataPayment ? dataPayment.reject_reason : null,
-    // data review
     review: dataReview
       ? {
           rating: dataReview.rating,
@@ -61,8 +58,6 @@ const INCLUDE_SEMUA_RELASI = [
 ];
 
 module.exports = {
-  // POST /bookings
-  // FE kirim: serviceId, serviceType, address, date, time, paymentMethod, notes
   createBooking: async (req, res) => {
     try {
       const {

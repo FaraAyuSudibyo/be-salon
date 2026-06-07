@@ -1,6 +1,5 @@
 "use strict";
-const { Service } = require("../models");
-
+const { Service, Booking, User } = require("../models");
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -9,10 +8,9 @@ module.exports = {
     const HOME_FEE = 50000;
 
     // ambil customer yang sudah di-seed
-    const users = await queryInterface.sequelize.query(
-      `SELECT id_users, role FROM users`,
-      { type: Sequelize.QueryTypes.SELECT },
-    );
+    const users = await User.findAll({
+      attributes: ["id_users", "role"],
+    });
     const customer = users.find((u) => u.role === "customer");
 
     // daftar tanggal yang sudah pasti valid
@@ -70,14 +68,13 @@ module.exports = {
       });
     }
 
-    // simpan data ke tabel bookings
     await queryInterface.bulkInsert("bookings", data);
 
     // ambil booking yang baru dibuat untuk dijadikan relasi payments
-    const bookings = await queryInterface.sequelize.query(
-      `SELECT id_bookings, total_price, status FROM bookings ORDER BY id_bookings ASC`,
-      { type: Sequelize.QueryTypes.SELECT },
-    );
+    const bookings = await Booking.findAll({
+      attributes: ["id_bookings", "total_price", "status"],
+      order: [["id_bookings", "ASC"]],
+    });
 
     const paymentData = [];
     const methodList = ["transfer", "qris", "cash"];

@@ -7,7 +7,7 @@ module.exports = {
         data: data,
       };
     }
-    // jika tidak ada data (misal untuk delete), cukup kembalikan status dan pesan
+    // jika tidak ada data, cukup kembalikan status dan pesan
     return {
       status: statusCode,
       message: pesan,

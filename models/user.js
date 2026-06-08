@@ -4,7 +4,6 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // satu user bisa punya banyak booking
       User.hasMany(models.Booking, { foreignKey: "id_users", as: "bookings" });
     }
   }
@@ -42,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
       tableName: "users",
       timestamps: true,
-      underscored: true, // created_at / updated_at
+      underscored: true, 
     },
   );
 

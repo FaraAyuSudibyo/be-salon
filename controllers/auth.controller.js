@@ -38,14 +38,13 @@ module.exports = {
       const passwordTerenkripsi = await bcrypt.hash(password, 10);
 
       const userBaru = await User.create({
-        username: name, // FE kirim "name", disimpan sebagai "username" di database
+        username: name,
         email,
         password: passwordTerenkripsi,
         phone,
         role: "customer",
       });
 
-      // output tanpa password
       return res.status(201).json(
         response(201, "created", {
           id: userBaru.id_users,
@@ -60,7 +59,6 @@ module.exports = {
     }
   },
 
-  // FE kirim: email, password
   login: async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -82,7 +80,7 @@ module.exports = {
           .status(400)
           .json(response(400, "validasi error", "Email atau password salah"));
 
-      // cek apakah password cocok dengan yang ada di database
+      // cek password cocok dengan yang ada di database
       const passwordCocok = await bcrypt.compare(password, dataUser.password);
       if (!passwordCocok)
         return res
@@ -101,7 +99,6 @@ module.exports = {
         { expiresIn: "24h" },
       );
 
-      // format output sesuai yang dipakai FE di AuthContext
       return res.status(200).json(
         response(200, "success", {
           user: {

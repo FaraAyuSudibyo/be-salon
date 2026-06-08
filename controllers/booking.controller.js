@@ -6,8 +6,6 @@ const { response } = require("../helpers/response.formatter");
 
 const BIAYA_HOME_SERVICE = 50000;
 
-// fungsi untuk mengubah format data booking dari database
-// menjadi format yang dipakai oleh frontend
 function formatBooking(dataBooking) {
   const dataPayment = dataBooking.payment || null;
   const dataReview = dataBooking.review || null;
@@ -45,7 +43,7 @@ function formatBooking(dataBooking) {
   };
 }
 
-// daftar relasi yang selalu ikut diambil bersama booking
+// relasi yang diambil bersama booking
 const INCLUDE_SEMUA_RELASI = [
   { model: User, as: "user", attributes: ["id_users", "username", "phone"] },
   {
@@ -102,14 +100,14 @@ module.exports = {
             ),
           );
 
-      // cek apakah service ada di database
+      // cek service ada di database
       const dataService = await Service.findByPk(idService);
       if (!dataService)
         return res
           .status(400)
           .json(response(400, "validasi error", "Layanan tidak ditemukan"));
 
-      // hitung biaya home service dan total harga
+      // hitung total + home service 
       const biayaHomeService =
         tipeService === "homeservice" ? BIAYA_HOME_SERVICE : 0;
       const totalHarga = dataService.price + biayaHomeService;
@@ -136,7 +134,7 @@ module.exports = {
         status: "unpaid",
       });
 
-      // ambil data booking lengkap beserta relasinya
+      // ambil data beserta relasinya
       const hasilBooking = await Booking.findByPk(bookingBaru.id_bookings, {
         include: INCLUDE_SEMUA_RELASI,
       });
@@ -148,7 +146,7 @@ module.exports = {
     }
   },
 
-  // GET /bookings/my — booking milik customer yang sedang login
+  //booking milik customer yang sedang login
   getMyBookings: async (req, res) => {
     try {
       const semuaBookingKu = await Booking.findAll({
@@ -164,7 +162,7 @@ module.exports = {
     }
   },
 
-  // GET /bookings — semua booking (admin), dengan pagination dan filter
+  // semua booking (admin)
   getBookings: async (req, res) => {
     try {
       const halamanSekarang = Number(req.query.page) || 1;
@@ -172,7 +170,7 @@ module.exports = {
       const posisiAwal = (halamanSekarang - 1) * jumlahPerHalaman;
       const { status, service_type, search } = req.query;
 
-      // kondisi pencarian
+      // pencarian
       const kondisiFilter = {};
       if (status && status !== "semua") kondisiFilter.status = status;
       if (service_type && service_type !== "semua")
@@ -220,7 +218,7 @@ module.exports = {
     }
   },
 
-  // GET /bookings/:id — detail satu booking
+  // detail satu booking
   detailBooking: async (req, res) => {
     try {
       const dataBooking = await Booking.findByPk(req.params.id, {
@@ -236,7 +234,7 @@ module.exports = {
     }
   },
 
-  // PATCH /bookings/:id/status — admin ubah status booking
+  // admin ubah status booking
   updateStatus: async (req, res) => {
     try {
       const statusYangValid = [
@@ -272,7 +270,7 @@ module.exports = {
     }
   },
 
-  // PATCH /bookings/:id/cancel — customer batalkan booking
+  // customer batalkan booking
   cancelBooking: async (req, res) => {
     try {
       const dataBooking = await Booking.findByPk(req.params.id);
@@ -293,8 +291,7 @@ module.exports = {
     }
   },
 
-  // PATCH /bookings/:id/reschedule — customer ubah jadwal booking
-  // FE kirim: date, time
+  // customer ubah jadwal booking
   rescheduleBooking: async (req, res) => {
     try {
       const { date, time } = req.body;
@@ -326,7 +323,7 @@ module.exports = {
     }
   },
 
-  // DELETE /bookings/:id — admin hapus booking
+  // admin hapus booking
   deleteBooking: async (req, res) => {
     try {
       await Booking.destroy({ where: { id_bookings: req.params.id } });
@@ -336,8 +333,7 @@ module.exports = {
     }
   },
 
-  // POST /bookings/:id/review — customer tambah review
-  // FE kirim: rating (angka 1-5), comment
+  // customer tambah review
   addReview: async (req, res) => {
     try {
       const { rating, comment } = req.body;
@@ -365,7 +361,7 @@ module.exports = {
     }
   },
 
-  // PUT /bookings/:id/review — customer edit review
+  // customer edit review
   editReview: async (req, res) => {
     try {
       const { rating, comment } = req.body;
@@ -390,7 +386,7 @@ module.exports = {
     }
   },
 
-  // DELETE /bookings/:id/review — customer hapus review
+  // customer hapus review
   deleteReview: async (req, res) => {
     try {
       await Review.destroy({ where: { id_bookings: req.params.id } });

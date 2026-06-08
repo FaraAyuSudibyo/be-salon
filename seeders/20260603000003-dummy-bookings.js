@@ -7,13 +7,11 @@ module.exports = {
     const data = [];
     const HOME_FEE = 50000;
 
-    // ambil customer yang sudah di-seed
     const users = await User.findAll({
       attributes: ["id_users", "role"],
     });
     const customer = users.find((u) => u.role === "customer");
 
-    // daftar tanggal yang sudah pasti valid
     const dates = [
       "2025-06-01",
       "2025-06-05",
@@ -27,21 +25,15 @@ module.exports = {
       "2025-07-20",
     ];
 
-    // membuat data booking sebanyak 10
     for (let i = 1; i <= 10; i++) {
       const randomService =
-        services[Math.floor(Math.random() * services.length)];
-      // mengambil service secara acak
-      // .floor = membulatkan (ambil angka sebelum koma), .random = generate desimal 0-1
-      // contoh: random (0.5), services.length (7) : 0.5 * 7 = 3.5 : floor = 3 (index ke-3)
+        services[Math.floor(Math.random() * services.length)]; 
 
       const serviceType = i % 3 === 0 ? "homeservice" : "onsite";
-      // setiap kelipatan 3 dijadikan homeservice, sisanya onsite
 
       const fee = serviceType === "homeservice" ? HOME_FEE : 0;
       const total_price = randomService.price + fee;
 
-      // variasi status booking
       const statusList = [
         "pending",
         "confirmed",
@@ -81,7 +73,6 @@ module.exports = {
 
     for (let i = 0; i < bookings.length; i++) {
       const b = bookings[i];
-      // variasi status payment berdasarkan status booking
       let payStatus = "unpaid";
       if (b.status === "completed") payStatus = "paid";
       if (b.status === "confirmed") payStatus = "pending_verification";
@@ -91,7 +82,6 @@ module.exports = {
         id_bookings: b.id_bookings,
         amount: b.total_price,
         method: methodList[i % methodList.length],
-        // menggilir method: transfer, qris, cash, transfer, qris, cash, dst
         status: payStatus,
         payment_proof: null,
         reject_reason: null,
@@ -105,7 +95,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    // menghapus data
     await queryInterface.bulkDelete("reviews", null, {});
     await queryInterface.bulkDelete("payments", null, {});
     await queryInterface.bulkDelete("bookings", null, {});

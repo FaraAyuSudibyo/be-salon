@@ -30,14 +30,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      // duration disimpan sebagai menit (integer) agar mudah ditampilkan di FE
       duration: {
         type: DataTypes.INTEGER,
       },
       category: {
         type: DataTypes.STRING,
       },
-      // image: filename atau URL eksternal (unsplash dll)
       image: {
         type: DataTypes.STRING,
         get() {

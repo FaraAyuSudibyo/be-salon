@@ -12,7 +12,6 @@ const routerPayment = require("./routes/payment.route");
 const routerReport = require("./routes/report.route");
 const routerProfile = require("./routes/profile.route");
 
-// koneksi ke database 
 db.sequelize
   .authenticate()
   .then(() => console.log("Database terhubung"))
@@ -29,7 +28,6 @@ app.use("/payments", verifyToken, routerPayment);
 app.use("/reports", verifyToken, routerReport);
 app.use("/profile", verifyToken, routerProfile);
 
-// route utama untuk cek apakah server berjalan
 app.get("/", (req, res) => res.send("Dream Beauty Salon API - Ready!"));
 
 app.listen(port, () =>

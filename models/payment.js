@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT,
       },
       amount: {
-        type: DataTypes.INTEGER, // sama dengan total_price di booking
+        type: DataTypes.INTEGER, 
       },
       method: {
         type: DataTypes.ENUM("cash", "transfer", "qris"),
@@ -33,7 +33,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("unpaid", "pending_verification", "paid"),
         defaultValue: "unpaid",
       },
-      // tambahan untuk fitur upload bukti di FE
       payment_proof: {
         type: DataTypes.STRING,
         get() {

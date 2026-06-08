@@ -7,13 +7,9 @@ const { Service } = require("../models");
 const { response } = require("../helpers/response.formatter");
 
 module.exports = {
-  // GET /services  (query: name, category)
-  // FE pakai: service.id, service.name, service.category, service.price, dst
   getService: async (req, res) => {
     try {
       const { name, category } = req.query;
-
-      // kondisi pencarian berdasarkan query yang dikirim
       const kondisiCari = {};
       if (name) kondisiCari.name = { [Op.like]: `%${name}%` };
       if (category) kondisiCari.category = category;
@@ -23,7 +19,6 @@ module.exports = {
         order: [["created_at", "DESC"]],
       });
 
-      // ubah nama kolom id_services menjadi id (sesuai yang dipakai FE)
       const dataOutput = semuaService.map((service) => ({
         id: Number(service.id_services),
         name: service.name,
@@ -39,7 +34,7 @@ module.exports = {
     }
   },
 
-  // GET /services/:id — detail satu service
+  // detail satu service
   detailService: async (req, res) => {
     try {
       const dataService = await Service.findByPk(req.params.id);
@@ -62,8 +57,7 @@ module.exports = {
     }
   },
 
-  // POST /services — tambah service baru (admin)
-  // form-data: name, category, price, duration, description, image (file)
+  // tambah service baru (admin)
   createService: async (req, res) => {
     try {
       const { name, category, price, duration, description } = req.body;
@@ -88,7 +82,7 @@ module.exports = {
         price: Number(price),
         duration: duration ? Number(duration) : null,
         description: description || "",
-        image: req.file ? req.file.filename : null, // req.file = file yang diupload
+        image: req.file ? req.file.filename : null, 
       });
 
       return res.status(201).json(
@@ -107,7 +101,7 @@ module.exports = {
     }
   },
 
-  // PUT /services/:id — edit service (admin)
+  // edit service (admin)
   updateService: async (req, res) => {
     try {
       const { id } = req.params;
@@ -177,7 +171,7 @@ module.exports = {
     }
   },
 
-  // DELETE /services/:id — hapus service (admin)
+  // hapus service (admin)
   deleteService: async (req, res) => {
     try {
       await Service.destroy({ where: { id_services: req.params.id } });

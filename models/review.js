@@ -21,7 +21,6 @@ module.exports = (sequelize, DataTypes) => {
       id_bookings: {
         type: DataTypes.BIGINT,
       },
-      // rating disimpan integer 1-5, sama seperti yang dipakai FE
       rating: {
         type: DataTypes.INTEGER,
       },

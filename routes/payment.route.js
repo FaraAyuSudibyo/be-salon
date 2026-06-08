@@ -4,7 +4,6 @@ const upload = require("../middlewares/upload");
 const { verifyAdmin } = require("../middlewares/auth");
 const ctrl = require("../controllers/payment.controller");
 
-// customer upload bukti, :id = id_bookings
 router.patch(
   "/:id/upload-proof",
   upload.single("payment_proof"),

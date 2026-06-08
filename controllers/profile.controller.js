@@ -5,10 +5,8 @@ const { User } = require("../models");
 const { response } = require("../helpers/response.formatter");
 
 module.exports = {
-  // GET /profile — lihat profil user yang sedang login
   getProfile: async (req, res) => {
     try {
-      // req.user.userId diambil dari token JWT (lihat middlewares/auth.js)
       const dataUser = await User.findByPk(req.user.userId, {
         attributes: { exclude: ["password"] }, // jangan tampilkan password
       });
@@ -29,8 +27,7 @@ module.exports = {
     }
   },
 
-  // PUT /profile — update profil user
-  // FE kirim: name, phone
+  // update profil user
   updateProfile: async (req, res) => {
     try {
       const { name, phone } = req.body;
@@ -46,7 +43,6 @@ module.exports = {
           .json(response(400, "validasi error", hasilValidasi));
 
       // update data di database
-      // FE kirim "name", disimpan sebagai "username" di database
       await User.update(
         { username: name, phone },
         { where: { id_users: req.user.userId } },
@@ -68,9 +64,7 @@ module.exports = {
       return res.status(500).json(response(500, "server error", error.message));
     }
   },
-
-  // PATCH /profile/change-password — ganti password
-  // FE kirim: old_password, new_password
+  //  ganti password
   changePassword: async (req, res) => {
     try {
       const { old_password, new_password } = req.body;

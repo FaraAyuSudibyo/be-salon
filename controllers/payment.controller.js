@@ -4,8 +4,7 @@ const { Payment, Booking } = require("../models");
 const { response } = require("../helpers/response.formatter");
 
 module.exports = {
-  // GET /payments — semua data pembayaran (admin)
-  // query: status (unpaid / pending_verification / paid / semua)
+  // semua data pembayaran (admin)
   getPayments: async (req, res) => {
     try {
       const kondisiFilter = {};
@@ -24,9 +23,6 @@ module.exports = {
     }
   },
 
-  // PATCH /payments/:id/upload-proof — customer upload bukti pembayaran
-  // :id = id_bookings
-  // FE kirim form-data key: payment_proof (file gambar)
   uploadProof: async (req, res) => {
     try {
       // pastikan file bukti pembayaran ada
@@ -81,8 +77,7 @@ module.exports = {
     }
   },
 
-  // PATCH /payments/:id/confirm — admin konfirmasi pembayaran
-  // :id = id_bookings
+  // admin konfirmasi pembayaran
   confirmPayment: async (req, res) => {
     try {
       const dataPembayaran = await Payment.findOne({
@@ -108,9 +103,7 @@ module.exports = {
     }
   },
 
-  // PATCH /payments/:id/reject — admin tolak pembayaran
-  // :id = id_bookings
-  // FE kirim: reason (alasan penolakan)
+  // admin tolak pembayaran
   rejectPayment: async (req, res) => {
     try {
       const dataPembayaran = await Payment.findOne({

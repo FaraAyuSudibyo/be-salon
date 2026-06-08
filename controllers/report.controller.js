@@ -3,14 +3,11 @@ const { response } = require("../helpers/response.formatter");
 const { Op } = require("sequelize");
 
 module.exports = {
-  // GET /reports/summary — ringkasan statistik untuk halaman Dashboard FE
   getSummary: async (req, res) => {
     try {
-      // ambil semua pembayaran yang sudah lunas (paid)
       const pembayaranLunas = await Payment.findAll({
         where: { status: "paid" },
       });
-      // hitung total revenue dari semua pembayaran lunas
       const totalPendapatan = pembayaranLunas.reduce(
         (total, pembayaran) => total + (pembayaran.amount || 0),
         0,
@@ -45,7 +42,6 @@ module.exports = {
     }
   },
 
-  // GET /reports/revenue-by-service — pendapatan per layanan untuk halaman Reports FE
   getRevenueByService: async (req, res) => {
     try {
       // ambil semua booking yang sudah selesai (completed) dan pembayarannya lunas (paid)
@@ -91,8 +87,7 @@ module.exports = {
     }
   },
 
-  // GET /reports/booking-stats — statistik booking per bulan
-  // query: month (angka bulan 1-12), year (tahun misal 2026)
+  // statistik booking per bulan
   getBookingStats: async (req, res) => {
     try {
       const { month, year } = req.query;

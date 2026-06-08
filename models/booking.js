@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATEONLY, // format YYYY-MM-DD
       },
       time: {
-        type: DataTypes.STRING, // format HH:MM, misal "10:00"
+        type: DataTypes.STRING, // format HH:MM
       },
       notes: {
         type: DataTypes.TEXT,
@@ -59,7 +59,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "onsite",
       },
       address: {
-        type: DataTypes.TEXT, // wajib diisi kalau service_type = homeservice
+        type: DataTypes.TEXT, 
       },
       home_service_fee: {
         type: DataTypes.INTEGER,

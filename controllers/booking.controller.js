@@ -60,19 +60,17 @@ module.exports = {
     try {
       const {
         serviceId,
-        service_type,
         serviceType,
         address,
         date,
         time,
         paymentMethod,
-        payment_method,
         notes,
       } = req.body;
 
       const idService = Number(serviceId || req.body.id_services);
-      const tipeService = service_type || serviceType || "onsite";
-      const metodePembayaran = payment_method || paymentMethod || "transfer";
+      const tipeService = serviceType || "onsite";
+      const metodePembayaran = paymentMethod || "transfer";
 
       const schema = {
         idService: { type: "number", positive: true, integer: true },
